@@ -1,5 +1,5 @@
 import Database_Systems.*;
-import java.io.*;
+// import java.io.*;
 import java.util.Scanner;
 
 class FellowshipDatabase {
@@ -10,7 +10,8 @@ class FellowshipDatabase {
         System.out.println("Welcome to Fellowship Database");
         // To Print todays Date
         utils.printDate();
-        utils.createFile();
+        utils.createFile("schema.txt");
+        utils.loadTables();
 
         Scanner readUserInputs = new Scanner(System.in);
         String sqlCommand = readUserInputs.nextLine();
@@ -24,13 +25,18 @@ class FellowshipDatabase {
             }
             else if(commands[0].equals("CREATE"))
             {
-                System.out.println("CREATE Running");
+                // System.out.println("CREATE Running");
                 utils.Create(commands);
             }
             else if(commands[0].equals("HELP"))
             {
-                System.out.println("HELP Running");
+                // System.out.println("HELP Running");
                 utils.Help(commands);
+            }
+            else if(commands[0].equals("INSERT"))
+            {
+                // System.out.println("INSERT RUNNING");
+                utils.Insert(commands);
             }
             // else if(commands[0].equals("SELECT"))
             // {
