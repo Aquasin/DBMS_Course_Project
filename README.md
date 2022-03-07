@@ -7,13 +7,15 @@ Repo for DBMS Course Project
 1. Compile ` FellowshipDatabase.java` using javac
 2. Run `FellowshipDatabase` using java
 
+### USE HASHMAP FOR TABLE SCHEMA
+
 ## Thing to do
 
 COMMANDS:
 
 <ul>
 <li>
-CREATE (Error checking left)
+CREATE (DONE)
 </li>
 <li>
 SELECT
@@ -28,12 +30,15 @@ UPDATE
 DELETE
 </li>
 <li>
-DROP
+DROP (DONE)
 </li>
 <li>
 HELP (DONE)
 </li>
 <li>
 QUIT (DONE)
+</li>
+<li>
+CLEAR (DONE)
 </li>
 </ul>
