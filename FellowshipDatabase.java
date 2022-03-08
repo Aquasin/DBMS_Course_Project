@@ -56,7 +56,7 @@ class FellowshipDatabase {
                 // System.out.println("HELP Running");
                 utils.Clear(commands);
             }
-            else if(commands[0].equals("INSERT"))
+            else if(commands[0].equals("INSERT") && commands[1].equals("INTO") && commands[3].equals("VALUES"))
             {
                 // System.out.println("INSERT RUNNING");
                 utils.Insert(commands);
@@ -66,7 +66,7 @@ class FellowshipDatabase {
                 System.out.println("SELECT Running");
             }
             else {
-                System.out.print("Incorrect Command");
+                System.out.println("Incorrect Command");
             }
             //* Prompt
             System.out.print("Fellowship> ");

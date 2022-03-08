@@ -55,7 +55,7 @@ public class utils {
     }
 
     //* To check if a table with the given name exists 
-    public static Boolean tableExists(String tableName)
+    private static Boolean tableExists(String tableName)
     {
         if(tableSchema.get(tableName) != null)
         {
@@ -101,6 +101,21 @@ public class utils {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    private static boolean isNumeric(String str)
+    {
+        return str != null && !str.matches("[0-9.]+.[0-9.]+");
+    }
+
+    private static boolean isDecimal(String str)
+    {
+        return str != null && str.matches("[0-9.]+.[0-9.]+");
+    }
+
+    private static boolean isString(String str)
+    {
+        return str != null && str.matches("'[a-zA-Z]+'");
     }
 
     public static void Create(String[] commands)
@@ -223,9 +238,6 @@ public class utils {
             System.out.println("Error occured while Dropping Table "+tableName);
             e.printStackTrace();
         }
-
-
-
     }
     
     public static void Help(String[] commands)
@@ -294,18 +306,90 @@ public class utils {
     public static void Insert(String[] commands)
     {
         //TODO: Error Checking remaining
+        //* 7 because INSERT INTO TABLE_NAME VALUES ( ATTRIBUTE_NAME ); 
+        if(commands.length < 7)
+        {
+            System.out.println("Incorrect INSERT Command");
+            return;
+        }
+        if(!commands[4].equals("(") || !commands[commands.length-1].equals(");"))
+        {
+        	System.out.println("Incorrect INSERT Command");
+            return;
+	    }    
+        String remainingString = "";
+        for(int i=5;i<commands.length-1;i++)
+        {
+        	remainingString+=commands[i];
+	    }  
+        if(remainingString.indexOf(")") != -1 || remainingString.indexOf("(") != -1)
+        {
+        	System.out.println("Incorrect INSERT Command");
+            return;
+	    }
+        // System.out.println(remainingString);
+        String[] attributeValues = remainingString.split(",");
+        
         String tableName = commands[2];
-        String rowDetails="";
         if(!tableExists(tableName)) 
         {
             System.out.println(commands[2] + " doesn't exists");
             return;
         }
-        for(int i=5;i<commands.length;i++)
+        String rowDetails="";
+        ArrayList<String> headRow = tableSchema.get(tableName);
+        // System.out.println(headRow);
+        if(attributeValues.length != headRow.size()/2)
         {
-            if(!commands[i].equals(",")  && !commands[i].equals(");"))
+            System.out.println("Insufficient Attributes");
+            return;
+        }
+
+        for(int i=0;i<headRow.size()/2;i++)
+        {
+            if(headRow.get(2*i+1).contains("CHAR"))
             {
-                rowDetails+=commands[i] + "#";
+                if(isString(attributeValues[i]))
+                {
+                    int maxCharSize = Integer.parseInt(headRow.get(2*i+1).substring(5,headRow.get(2*i+1).length()-1));
+                    if(attributeValues[i].length()-2 > maxCharSize)
+                    {
+                        System.out.println(attributeValues[i] + " is too long");
+                        return;
+                    }
+
+                    rowDetails+=attributeValues[i].substring(1,attributeValues[i].length()-1)+"#";
+                } 
+                else 
+                {
+                    System.out.println("Expected CHAR Datatype");
+                    return;
+                }
+                
+            }
+            else if(headRow.get(2*i+1).equals("INT"))
+            {
+                if(isNumeric(attributeValues[i]))
+                {
+                    rowDetails+=attributeValues[i]+"#";
+                }
+                else 
+                {
+                    System.out.println("Expected INT Datatype");
+                    return;
+                }
+            }
+            else if(headRow.get(2*i+1).contains("DECIMAL"))
+            {
+                if(isDecimal(attributeValues[i]))
+                {
+                    rowDetails+=attributeValues[i]+"#";
+                }
+                else 
+                {
+                    System.out.println("Expected DECIMAL Datatype");
+                    return;
+                }
             }
         }
         rowDetails = rowDetails.substring(0,rowDetails.length()-1);
