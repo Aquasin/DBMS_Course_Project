@@ -13,6 +13,8 @@ Repo for DBMS Course Project
 
 2. Look into Optimizing the code. Make the code modular
 
+3. Use StringBuilder if possible for String concatenation instead of +=
+
 ## While running commands keep spaces before and after ( and , and only before for );
 
 <h3 style="color:#00ff00">Correct Way</h3>
