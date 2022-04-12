@@ -5,11 +5,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 // keyWords 
@@ -27,17 +28,17 @@ public class utils {
     static int MAX_TABLE_LENGTH;
 
     //* Storing the Schema of the table 
-    static HashMap<String,ArrayList<String>> tableSchema;
+    static Map<String,List<String>> tableSchema;
     //* Storing the Detail of each table 
-    static HashMap<String,ArrayList<String>> tableDetails;
+    static Map<String,List<String>> tableDetails;
     //* Storing the Maximum Attribute Length of each table 
-    static HashMap<String,Integer> tableLengthCount;
+    static Map<String,Integer> tableLengthCount;
 
     //* Loading the table schema initially in a Hashmap 
     public static void loadTableSchema()
     {
-        tableSchema = new HashMap<String,ArrayList<String>>();
-        tableDetails = new HashMap<String,ArrayList<String>>();
+        tableSchema = new HashMap<String,List<String>>();
+        tableDetails = new HashMap<String,List<String>>();
         tableLengthCount = new HashMap<String,Integer>();
         MAX_TABLE_LENGTH=0;
 
@@ -48,7 +49,7 @@ public class utils {
             {
                 String lineContents = fileContents.nextLine();
                 String[] dataArray = lineContents.split("#");
-                ArrayList<String> temp = new ArrayList<String>();
+                List<String> temp = new ArrayList<String>();
                 String key = dataArray[0];
                 int maxAttributeLength=0;
 
@@ -85,25 +86,17 @@ public class utils {
     //* Loading the table details in a Hashmap tableDetails
     public static void loadTables(String tableName)
     {
-        System.out.println("Loading from File");
+        // System.out.println("Loading from File");
         try {
             File schemaFile = new File(tableName + ".txt");
             Scanner fileContents = new Scanner(schemaFile);
-            ArrayList<String> temp = new ArrayList<String>();
+            List<String> temp = new ArrayList<String>();
             while (fileContents.hasNextLine())
             {
                 String lineContents = fileContents.nextLine();
-                // String[] dataArray = lineContents.split("#");
                 temp.add(lineContents);
-                // String key = dataArray[0];
-                // for(int i=0;i<dataArray.length;i++)
-                // {
-                //     temp.add(dataArray[i]);
-                // }
-                // System.out.println(lineContents);
             }
             tableDetails.put(tableName, temp);
-            // System.out.println(tableSchema);
 
             fileContents.close();
         } catch(FileNotFoundException e)
@@ -168,16 +161,19 @@ public class utils {
 
     // }
 
+    //* regex for checking if given string is Numeric
     private static boolean isNumeric(String str)
     {
         return str != null && !str.matches("[0-9.]+.[0-9.]+");
     }
-
+    
+    //* regex for checking if given string is Decimal
     private static boolean isDecimal(String str)
     {
         return str != null && str.matches("[0-9.]+.[0-9.]+");
     }
-
+    
+    //* regex for checking if given string is String
     private static boolean isString(String str)
     {
         return str != null && str.matches("'[a-zA-Z]+'");
@@ -188,7 +184,7 @@ public class utils {
         //TODO: Error Checking remaining
         //* 7 because CREATE TABLE TABLE_NAME ( Attribute_Name Datatype );
         //* (commands.length-7)%3 because CREATE TABLE TABLE_NAME ( Attribute_Name Datatype , Attribute_Name Datatype );
-        if(commands.length < 7 || (commands.length-7)%3 != 0 || commands[1].equals("TABLE"))
+        if(commands.length < 7 || (commands.length-7)%3 != 0 || !commands[1].equals("TABLE"))
         {
             System.out.println("Incorrect CREATE Command");
             return;
@@ -241,7 +237,7 @@ public class utils {
         }
         //* To Create the table file.
         createFile(dataArray[0]+".txt");
-        ArrayList<String> temp = new ArrayList<String>();
+        List<String> temp = new ArrayList<String>();
         String key = dataArray[0];
         for(int i=1;i<dataArray.length;i++)
         {
@@ -359,8 +355,7 @@ public class utils {
         {
             maxAttributeLength = "Attribute Name".length();
         }
-        ArrayList<String> tempArray;
-        tempArray = tableSchema.get(tableName);
+        List<String> tempArray = tableSchema.get(tableName);
         System.out.println(String.format(String.format("%"+((maxAttributeLength+4) + 11)+"s","").replace(' ','-')));
         System.out.println(String.format("| %-"+maxAttributeLength+"s |","Attribute Name") + String.format(" %-8s |","Datatype"));
         System.out.println(String.format(String.format("%"+((maxAttributeLength+4) + 11)+"s","").replace(' ','-')));
@@ -378,9 +373,9 @@ public class utils {
 
     public static void Insert(String[] commands)
     {
-        //TODO: Error Checking remaining
+        // TODO: Error Checking remaining
         //* 7 because INSERT INTO TABLE_NAME VALUES ( ATTRIBUTE_NAME ); 
-        if(commands.length < 7 || (!commands[1].equals("INTO") && !commands[3].equals("VALUES")))
+        if(commands.length < 7 || !(commands[1].equals("INTO") && commands[3].equals("VALUES")))
         {
             System.out.println("Incorrect INSERT Command");
             return;
@@ -411,7 +406,7 @@ public class utils {
             return;
         }
         String rowDetails="";
-        ArrayList<String> headRow = tableSchema.get(tableName);
+        List<String> headRow = tableSchema.get(tableName);
         // System.out.println(headRow);
         if(attributeValues.length != headRow.size()/2)
         {
@@ -489,6 +484,7 @@ public class utils {
 
     public static void Select(String[] commands)
     {
+        //* Error checking in Select Command
         //* 4 becuase SELECT * FROM STUDENT;
         if(commands.length < 4)
         {
@@ -496,33 +492,184 @@ public class utils {
             return;
         }
         
-        // String[] commands = {"SELECT","NAME","ID","FROM","STUDENT","WHERE"};
-        // for(int i=0;i<commands.length;++i)
-        // {
-        //     if(commands[i].equals("FROM"))
-        //     {
-        //         System.out.println(i);
-        //         break;
-        //     }
-        // }
-
-        String tableName = commands[3];
-        tableName = tableName.substring(0,tableName.length()-1);
-        if(!tableExists(tableName)) 
+        int indexFrom;
+        for(indexFrom=0;indexFrom<commands.length;++indexFrom)
         {
-            System.out.println(tableName + " doesn't exists");
+            if(commands[indexFrom].equals("FROM"))
+            {
+                // System.out.println(indexFrom);
+                break;
+            }
+        }
+
+        if(indexFrom == commands.length) 
+        {
+            System.out.println("Expected FROM Keyword in SELECT Command");
             return;
         }
 
-        if(tableDetails.get(tableName) == null)
+        if(indexFrom < 2)
         {
-            loadTables(tableName);
+            System.out.println("Columns not given");
+            return;
         }
-        System.out.println(tableDetails.get(tableName));
-    }
 
+        //* Did not consider 1 column name given
+        if(indexFrom == 2 && !commands[1].equals("*"))
+        {
+            System.out.println("Incorrect SELECT Command");
+            return;
+        }
+
+        //* This means FROM keyword is present and all columns have to be considered
+        if(indexFrom == 2)
+        {
+            String tableName = commands[3];
+            tableName = tableName.substring(0,tableName.length()-1);
+            if(!tableExists(tableName)) 
+            {
+                System.out.println(tableName + " doesn't exists");
+                return;
+            }
+
+            if(tableDetails.get(tableName) == null)
+            {
+                loadTables(tableName);
+            }
+            List<String> tableHeader = tableSchema.get(tableName);
+            for(int i=0;i<tableHeader.size();i+=2)
+            {
+                System.out.print(String.format("%-10s ",tableHeader.get(i)));
+            }
+            System.out.println();
+        
+            for(String tableRow : tableDetails.get(tableName)) 
+            {
+                String[] tableArray = tableRow.split("#");
+                for(int i=0;i<tableArray.length;++i) 
+                {
+                    System.out.print(String.format("%-10s ",tableArray[i]));
+                }
+                System.out.println();
+            }
+        } else {
+            String tableName = commands[indexFrom+1];
+            tableName = tableName.substring(0,tableName.length()-1);
+            if(!tableExists(tableName)) 
+            {
+                System.out.println(tableName + " doesn't exists");
+                return;
+            }
+
+            if(tableDetails.get(tableName) == null)
+            {
+                loadTables(tableName);
+            }
+            List<String> tableHeader = tableSchema.get(tableName);
+            List<Integer> columnIndexes = new ArrayList<Integer>();
+
+            for(int i=1;i<indexFrom;++i)
+            {
+                // System.out.println(i);
+                // System.out.println(commands[i]);
+                if(i%2 == 0)
+                {
+                    if(!commands[i].equals(","))
+                    {
+                        System.out.println("Expected ,");
+                        return;
+                    }
+                } else {
+                    boolean columnExist = false;
+                    // System.out.println(tableHeader);
+                    for(int j=0;j<tableHeader.size();j+=2) 
+                    {
+                        if(commands[i].equals(tableHeader.get(j)))
+                        {
+                            // System.out.println(i);
+                            // System.out.println(j);
+                            columnIndexes.add(j);
+                            columnExist = true;
+                            break;
+                        }
+                    }
+                    if(!columnExist)
+                    {
+                        System.out.println(commands[i] + " doesn't exist in " + tableName + " table");
+                        return;
+                    }
+                }
+            }
+
+            for(Integer columnIndex : columnIndexes)
+            {
+                System.out.print(String.format("%-10s ",tableHeader.get(columnIndex)));
+            }
+            System.out.println();
+        
+            for(String tableRow : tableDetails.get(tableName)) 
+            {
+                String[] tableArray = tableRow.split("#");
+                for(Integer columnIndex : columnIndexes) 
+                {
+                    System.out.print(String.format("%-10s ",tableArray[columnIndex/2]));
+                }
+                System.out.println();
+            }
+        }
+    }
+    
     public static void Delete(String[] commands)
     {
+        //* 3 becuase DELETE FROM TABLE_NAME; which deletes all the records of the table
+        if(commands.length == 3 && commands[1].equals("FROM"))
+        {
+            String tableName = commands[2].substring(0,commands[2].length()-1);
+            if(!tableExists(tableName)) 
+            {
+                System.out.println(tableName + " doesn't exists");
+                return;
+            }
+            if(tableDetails.get(tableName) == null)
+            {
+                loadTables(tableName);
+            }   
+            
+            List<String> tableRows = tableDetails.get(tableName);
+            int count = 0;
+            
+            for(int i=0;i<tableRows.size();++i)
+            {
+                tableDetails.get(tableName).remove(i);
+                // --i because the size of tableRow gets reduced by 1 when a record is removed from ArrayList
+                // and hence it skips the next record and goes to the +2 index record.
+                --i;
+                ++count;
+            }
+
+            System.out.println("Count is "+count);
+            if(count != 0)
+            {
+                List<String> tableRow = tableDetails.get(tableName);
+                String rowDetails="";
+                for(int i=0;i<tableRow.size();++i)
+                {
+                    rowDetails+=tableRow.get(i)+"\n";
+                }
+                String fileName=tableName+".txt";
+                try {
+                    BufferedWriter fileWriter = new BufferedWriter(new FileWriter(fileName));
+                    fileWriter.write(rowDetails);
+                    System.out.println(count + " rows deleted Successfully in " + tableName);
+                    fileWriter.close();
+                } catch (IOException e) {
+                    System.out.println("Error occurred while deleting rows in " + tableName);
+                    e.printStackTrace();
+                }
+            } 
+            return;
+        }
+        
         //* 7 becuase DELETE FROM TABLE_NAME WHERE ID = 2;
         if(commands.length < 7 || !(commands[1].equals("FROM") && commands[3].equals("WHERE")))
         {
@@ -539,9 +686,11 @@ public class utils {
         {
             loadTables(tableName);
         }
-        ArrayList<String> headRow = tableSchema.get(tableName);
+        List<String> headRow = tableSchema.get(tableName);
         boolean columnExist = false;
         int indexColumnNo = 0;
+        System.out.println(headRow);
+        System.out.println(headRow);
         for(indexColumnNo=0;indexColumnNo<headRow.size()/2;++indexColumnNo)
         {
             if(headRow.get(2*indexColumnNo).equals(commands[4]))
@@ -555,24 +704,33 @@ public class utils {
             System.out.println(commands[4]+" doesn't exists in table "+tableName);
             return;
         }
-        ArrayList<String> tableRows = tableDetails.get(tableName);
+        List<String> tableRows = tableDetails.get(tableName);
         int count = 0;
+        System.out.println(tableRows);
+        String condition = commands[6].substring(0,commands[6].length()-1);
         for(int i=0;i<tableRows.size();++i)
         {
+            System.out.println(i);
             String[] temp = tableRows.get(i).split("#");
+            for(int j=0;j<temp.length;++j)
+            {
+                System.out.println(temp[j]);
+            }
             // System.out.println(temp.length);
-            String condition = commands[6].substring(0,commands[6].length()-1);
             if(condition.equals(temp[indexColumnNo]))
             {
                 System.out.println("Match Found");
                 tableDetails.get(tableName).remove(i);
+                // --i because the size of tableRow gets reduced by 1 when a record is removed from ArrayList
+                // and hence it skips the next record and goes to the +2 index record.
+                --i;
                 ++count;
             }
         }
         System.out.println("Count is "+count);
         if(count != 0)
         {
-            ArrayList<String> tableRow = tableDetails.get(tableName);
+            List<String> tableRow = tableDetails.get(tableName);
             String rowDetails="";
             for(int i=0;i<tableRow.size();++i)
             {
@@ -596,8 +754,8 @@ public class utils {
 
     public static void Update(String[] commands)
     {
-        //* 11 becuase UPDATE TABLE_NAME SET ATTRIBUTE_NAME1 = ATTRIBUTE_VALUE1 WHERE ATTRIBUTE_NAME2 = ATTRIBUTE_VALUE2;
-        if(commands.length < 11)
+        //* 10 becuase UPDATE TABLE_NAME SET ATTRIBUTE_NAME1 = ATTRIBUTE_VALUE1 WHERE ATTRIBUTE_NAME2 = ATTRIBUTE_VALUE2;
+        if(commands.length < 10 || !(commands[2].equals("SET") && commands[6].equals("WHERE")))
         {
             System.out.println("Incorrect UPDATE Command");
         }
@@ -610,6 +768,24 @@ public class utils {
         if(tableDetails.get(tableName) == null)
         {
             loadTables(tableName);
+        }
+        List<String> headRow = tableSchema.get(tableName);
+        Boolean attributeNameChange=false,attributeNameIdentifier=false;
+        for(String colName : headRow)
+        {
+            if(colName.equals(commands[3]))
+            {
+                attributeNameChange = true;
+            }
+            if(colName.equals(commands[7]))
+            {
+                attributeNameIdentifier = true;
+            }
+        }
+        if(!(attributeNameChange && attributeNameIdentifier))
+        {
+            System.out.println("Unknown Attribute name");
+            return;
         }
     }
 }

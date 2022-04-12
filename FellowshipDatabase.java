@@ -68,7 +68,7 @@ class FellowshipDatabase {
             }
             else if(commands[0].equals("SELECT"))
             {
-                System.out.println("SELECT Running");
+                // System.out.println("SELECT Running");
                 utils.Select(commands);
             }
             else if(commands[0].equals("DELETE"))
