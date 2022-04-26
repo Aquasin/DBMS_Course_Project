@@ -44,19 +44,19 @@ INSERT INTO TABLE_NAME VALUES ( 'hello' , 20);
 
 <ul>
 <li>
-CREATE (DONE)
+CREATE (DONE, Constraints Remaning like Unique, PK, Not Null and Check)
 </li>
 <li>
-SELECT
+SELECT (DONE {Only for = . < and > remaining}, But do refactoring as code is duplicate in multiple places)
 </li>
 <li>
-INSERT (DONE)
+INSERT (DONE, Checking Constraints remaining)
 </li>
 <li>
-UPDATE
+UPDATE (Done, Checking Multiple AND & OR Statement Remaining)
 </li>
 <li>
-DELETE
+DELETE (Done, Checking Multiple AND & OR Statement Remaining)
 </li>
 <li>
 DROP (DONE)

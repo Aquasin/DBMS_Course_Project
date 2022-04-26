@@ -200,7 +200,6 @@ public class utils {
         //* i=4 because from index 4 attributes name and datatype start.
         for(int i=4;i<commands.length;i+=3)
         {
-            // System.out.print(commands[i]);
             // if(!commands[i].equals(",") && !commands[i].equals(");"))
             // {
             //     fileContents+=commands[i]+"#";
@@ -491,18 +490,25 @@ public class utils {
             System.out.println("Incorrect SELECT Command");
             return;
         }
+        //* To remove the ending ;
+        commands[commands.length - 1] = commands[commands.length - 1].substring(0,commands[commands.length - 1].length()-1);
+        // System.out.println(commands[commands.length - 1]);
         
-        int indexFrom;
-        for(indexFrom=0;indexFrom<commands.length;++indexFrom)
+        int indexFrom = commands.length;
+        int indexWhere = commands.length;
+        for(int i=0;i<commands.length;++i)
         {
-            if(commands[indexFrom].equals("FROM"))
+            if(commands[i].equals("FROM"))
             {
-                // System.out.println(indexFrom);
-                break;
+                indexFrom = i;
+            }
+            if(commands[i].equals("WHERE"))
+            {
+                indexWhere = i;
             }
         }
 
-        if(indexFrom == commands.length) 
+        if(indexFrom == commands.length ) 
         {
             System.out.println("Expected FROM Keyword in SELECT Command");
             return;
@@ -515,59 +521,166 @@ public class utils {
         }
 
         //* Did not consider 1 column name given
-        if(indexFrom == 2 && !commands[1].equals("*"))
+        // if(indexFrom == 2 && !commands[1].equals("*"))
+        // {
+        //     System.out.println("Incorrect SELECT Command");
+        //     return;
+        // }
+
+        String tableName = commands[indexFrom+1];
+        if(!tableExists(tableName)) 
         {
-            System.out.println("Incorrect SELECT Command");
+            System.out.println(tableName + " doesn't exists");
             return;
         }
-
-        //* This means FROM keyword is present and all columns have to be considered
-        if(indexFrom == 2)
+        
+        if(tableDetails.get(tableName) == null)
         {
-            String tableName = commands[3];
-            tableName = tableName.substring(0,tableName.length()-1);
-            if(!tableExists(tableName)) 
+            loadTables(tableName);
+        }
+        List<String> tableHeader = tableSchema.get(tableName);
+        boolean conditionAND=false;
+        boolean conditionOR=false;
+        List<Integer> columnIndexes = new ArrayList<Integer>();
+        List<Integer> conditionColumnIndexes = new ArrayList<Integer>();
+        List<String> conditions = new ArrayList<String>();
+        //* This means FROM keyword is at index 2 and all columns have to be considered
+        if(indexFrom == 2 && commands[1].equals("*"))
+        {
+            
+            // SELECT * FROM STUDENT WHERE NAME = Hello; - 5 to 7
+            // SELECT * FROM STUDENT WHERE NAME = Hello AND ID = 2; - 5 to 11
+            // SELECT * FROM STUDENT WHERE NAME = Hello AND ID = 2 AND SAL = 30; - 5 to 15
+            for(int i=5;i<commands.length;i+=4)
             {
-                System.out.println(tableName + " doesn't exists");
-                return;
+                //* AND OR postions 8, 12, 16
+                if(i+3 < commands.length)
+                {
+                    if(commands[i+3].equals("AND"))
+                    {
+                        conditionAND = true;
+                    }
+                    else if(commands[i+3].equals("OR"))
+                    {
+                        conditionOR = true;
+                    }
+                    else
+                    {
+                        System.out.println("Expected AND or OR keyword");
+                        return;
+                    }
+                }
+                boolean columnExist = false;
+                for(int indexColumnNo=0;indexColumnNo<tableHeader.size();indexColumnNo+=2)
+                {
+                    if(tableHeader.get(indexColumnNo).equals(commands[i]))
+                    {
+                        columnExist = true;
+                        conditionColumnIndexes.add(indexColumnNo/2);
+                        conditions.add(commands[i+2]);
+                        break;
+                    }
+                }
+                if(!columnExist)
+                {
+                    System.out.println(commands[i]+" doesn't exists in table "+tableName);
+                    return;
+                }
             }
-
-            if(tableDetails.get(tableName) == null)
+            
+            if(conditionColumnIndexes.size() != 0)
             {
-                loadTables(tableName);
+                for(int i=0;i<conditionColumnIndexes.size();++i)
+                {
+                    System.out.println(conditionColumnIndexes.get(i) + " " + tableHeader.get(conditionColumnIndexes.get(i)*2));
+                }
             }
-            List<String> tableHeader = tableSchema.get(tableName);
+            
+            //* To display the Table Header Columns
             for(int i=0;i<tableHeader.size();i+=2)
             {
                 System.out.print(String.format("%-10s ",tableHeader.get(i)));
             }
             System.out.println();
-        
+            // 1#Gaurav#gaurav@gmail.com
             for(String tableRow : tableDetails.get(tableName)) 
             {
                 String[] tableArray = tableRow.split("#");
-                for(int i=0;i<tableArray.length;++i) 
+                String rowDisplay = "";
+                boolean displayRow = false;
+                if(conditionAND == true)
                 {
-                    System.out.print(String.format("%-10s ",tableArray[i]));
+                    displayRow = true;
                 }
-                System.out.println();
+                // 1, Gaurav, gaurav@gmail.com
+                //* Condition exists 
+                if(conditionColumnIndexes.size() != 0)
+                {
+                    for(int j=0;j<conditionColumnIndexes.size();++j)
+                    {
+                        // 8, 12, 16
+                        // System.out.println(tableArray[conditionColumnIndexes.get(j)]);
+                        // System.out.println(conditions.get(j));
+                        //* AND condition
+                        if(conditionAND == true)
+                        {
+                            if(!conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            {
+                                // rowDisplay += String.format("%-10s ",tableArray[i]);
+                                displayRow = false;
+                            }
+                        }
+                        //* OR condition
+                        else if(conditionOR == true)
+                        {
+                            if(conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            {
+                                // rowDisplay += String.format("%-10s ",tableArray[i]);
+                                displayRow = true;
+                            }
+                        }
+                        //* Neither AND nor OR. Only 1 condition
+                        else 
+                        {
+                            if(conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            {
+                                // rowDisplay += String.format("%-10s ",tableArray[i]);
+                                displayRow = true;
+                            }
+
+                        }
+                    }
+                    // System.out.print(String.format("%-10s ",tableArray[j]));
+                }
+                //* Condition doesn't exists so display all the rows
+                else 
+                {
+                    displayRow = true;
+                }
+                if(displayRow)
+                {
+                    for(int i=0;i<tableArray.length;++i)
+                    {
+                        rowDisplay += String.format("%-10s ",tableArray[i]);
+                    }
+                }
+                if(displayRow)
+                {
+                    System.out.println(rowDisplay);
+                }
             }
-        } else {
-            String tableName = commands[indexFrom+1];
-            tableName = tableName.substring(0,tableName.length()-1);
-            if(!tableExists(tableName)) 
+        } 
+        //* This means FROM keyword is at index 2 and then check the name of a single column given in query
+        //* OR
+        //* This means FROM keyword is not at index 2 and then check the names of all column given in query
+        else {
+
+            if((indexFrom-1)%2 == 0)
             {
-                System.out.println(tableName + " doesn't exists");
+                System.out.println("SELECT Command has extra ',' or ',' not given between names of columns");
                 return;
             }
-
-            if(tableDetails.get(tableName) == null)
-            {
-                loadTables(tableName);
-            }
-            List<String> tableHeader = tableSchema.get(tableName);
-            List<Integer> columnIndexes = new ArrayList<Integer>();
-
+            
             for(int i=1;i<indexFrom;++i)
             {
                 // System.out.println(i);
@@ -588,7 +701,7 @@ public class utils {
                         {
                             // System.out.println(i);
                             // System.out.println(j);
-                            columnIndexes.add(j);
+                            columnIndexes.add(j/2);
                             columnExist = true;
                             break;
                         }
@@ -601,30 +714,130 @@ public class utils {
                 }
             }
 
+            for(int i=indexFrom + 3;i<commands.length;i+=4)
+            {
+                if(i+3 < commands.length)
+                {
+                    if(commands[i+3].equals("AND"))
+                    {
+                        conditionAND = true;
+                    }
+                    else if(commands[i+3].equals("OR"))
+                    {
+                        conditionOR = true;
+                    }
+                    else
+                    {
+                        System.out.println("Expected AND or OR keyword");
+                        return;
+                    }
+                }
+                boolean columnExist = false;
+                for(int indexColumnNo=0;indexColumnNo<tableHeader.size();indexColumnNo+=2)
+                {
+                    if(tableHeader.get(indexColumnNo).equals(commands[i]))
+                    {
+                        columnExist = true;
+                        conditionColumnIndexes.add(indexColumnNo/2);
+                        conditions.add(commands[i+2]);
+                        break;
+                    }
+                }
+                if(!columnExist)
+                {
+                    System.out.println(commands[i]+" doesn't exists in table "+tableName);
+                    return;
+                }
+            }
+
+            if(conditionColumnIndexes.size() != 0)
+            {
+                for(int i=0;i<conditionColumnIndexes.size();++i)
+                {
+                    System.out.println(conditionColumnIndexes.get(i) + " " + tableHeader.get(conditionColumnIndexes.get(i)*2));
+                }
+            }
+
             for(Integer columnIndex : columnIndexes)
             {
-                System.out.print(String.format("%-10s ",tableHeader.get(columnIndex)));
+                System.out.print(String.format("%-10s",tableHeader.get(columnIndex*2)));
             }
             System.out.println();
-        
+            
             for(String tableRow : tableDetails.get(tableName)) 
             {
                 String[] tableArray = tableRow.split("#");
-                for(Integer columnIndex : columnIndexes) 
+                String rowDisplay = "";
+                boolean displayRow = false;
+                if(conditionAND == true)
                 {
-                    System.out.print(String.format("%-10s ",tableArray[columnIndex/2]));
+                    displayRow = true;
                 }
-                System.out.println();
+                // 1, Gaurav, gaurav@gmail.com
+                //* Condition exists 
+                if(conditionColumnIndexes.size() != 0)
+                {
+                    for(int j=0;j<conditionColumnIndexes.size();++j)
+                    {
+                        //* AND condition
+                        if(conditionAND == true)
+                        {
+                            if(!conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            {
+                                // rowDisplay += String.format("%-10s ",tableArray[i]);
+                                displayRow = false;
+                            }
+                        }
+                        //* OR condition
+                        else if(conditionOR == true)
+                        {
+                            if(conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            {
+                                // rowDisplay += String.format("%-10s ",tableArray[i]);
+                                displayRow = true;
+                            }
+                        }
+                        //* Neither AND nor OR. Only 1 condition
+                        else 
+                        {
+                            if(conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            {
+                                // rowDisplay += String.format("%-10s ",tableArray[i]);
+                                displayRow = true;
+                            }
+
+                        }
+                    }
+                    // System.out.print(String.format("%-10s ",tableArray[j]));
+                }
+                //* Condition doesn't exists so display all the rows
+                else 
+                {
+                    displayRow = true;
+                }
+                if(displayRow)
+                {
+                    for(Integer columnIndex : columnIndexes) 
+                    {
+                        rowDisplay += String.format("%-10s",tableArray[columnIndex]);
+                    }
+                }
+                if(displayRow)
+                {
+                    System.out.println(rowDisplay);
+                }
             }
         }
     }
     
     public static void Delete(String[] commands)
     {
+        int count = 0;
+        String tableName;
         //* 3 becuase DELETE FROM TABLE_NAME; which deletes all the records of the table
         if(commands.length == 3 && commands[1].equals("FROM"))
         {
-            String tableName = commands[2].substring(0,commands[2].length()-1);
+            tableName = commands[2].substring(0,commands[2].length()-1);
             if(!tableExists(tableName)) 
             {
                 System.out.println(tableName + " doesn't exists");
@@ -636,7 +849,6 @@ public class utils {
             }   
             
             List<String> tableRows = tableDetails.get(tableName);
-            int count = 0;
             
             for(int i=0;i<tableRows.size();++i)
             {
@@ -646,110 +858,108 @@ public class utils {
                 --i;
                 ++count;
             }
-
-            System.out.println("Count is "+count);
-            if(count != 0)
-            {
-                List<String> tableRow = tableDetails.get(tableName);
-                String rowDetails="";
-                for(int i=0;i<tableRow.size();++i)
-                {
-                    rowDetails+=tableRow.get(i)+"\n";
-                }
-                String fileName=tableName+".txt";
-                try {
-                    BufferedWriter fileWriter = new BufferedWriter(new FileWriter(fileName));
-                    fileWriter.write(rowDetails);
-                    System.out.println(count + " rows deleted Successfully in " + tableName);
-                    fileWriter.close();
-                } catch (IOException e) {
-                    System.out.println("Error occurred while deleting rows in " + tableName);
-                    e.printStackTrace();
-                }
-            } 
-            return;
         }
         
         //* 7 becuase DELETE FROM TABLE_NAME WHERE ID = 2;
-        if(commands.length < 7 || !(commands[1].equals("FROM") && commands[3].equals("WHERE")))
+        else if(commands.length >= 7 || (commands[1].equals("FROM") && commands[3].equals("WHERE")))
+        {
+            tableName = commands[2];
+            if(!tableExists(tableName)) 
+            {
+                System.out.println(tableName + " doesn't exists");
+                return;
+            }
+            if(tableDetails.get(tableName) == null)
+            {
+                loadTables(tableName);
+            }
+            List<String> headRow = tableSchema.get(tableName);
+            // int indexColumnNo = 0;
+            List<Integer> columnIndexes = new ArrayList<Integer>();
+            //* DELETE FROM STUDENT WHERE NAME = Vivek; - 4 to 6
+            //* DELETE FROM STUDENT WHERE NAME = Vivek AND ID = 1 AND SAL = 30; - 4 to 14
+            // System.out.println(headRow);
+            for(int i=4;i<commands.length;i+=4)
+            {
+                //* AND OR postions 7, 11, 15
+                if(i+3 < commands.length)
+                {
+                    if(!(commands[i+3].equals("AND") || commands[i+3].equals("OR")))
+                    {
+                        System.out.println("Expected AND or OR keyword");
+                        return;
+                    }
+                }
+                boolean columnExist = false;
+                for(int indexColumnNo=0;indexColumnNo<headRow.size();indexColumnNo+=2)
+                {
+                    if(headRow.get(indexColumnNo).equals(commands[i]))
+                    {
+                        columnExist = true;
+                        columnIndexes.add(indexColumnNo/2);
+                        break;
+                    }
+                }
+                if(!columnExist)
+                {
+                    System.out.println(commands[i]+" doesn't exists in table "+tableName);
+                    return;
+                }
+            }
+            // List<String> tableRows = tableDetails.get(tableName);
+            
+            // System.out.println(tableRows);
+            // String condition = commands[6].substring(0,commands[6].length()-1);
+            // for(int i=0;i<tableRows.size();++i)
+            // {
+            //     System.out.println(i);
+            //     String[] temp = tableRows.get(i).split("#");
+            //     // for(int j=0;j<temp.length;++j)
+            //     // {
+            //     //     System.out.println(temp[j]);
+            //     // }
+            //     // System.out.println(temp.length);
+            //     if(condition.equals(temp[indexColumnNo]))
+            //     {
+            //         System.out.println("Match Found");
+            //         tableDetails.get(tableName).remove(i);
+            //         // --i because the size of tableRow gets reduced by 1 when a record is removed from ArrayList
+            //         // and hence it skips the next record and goes to the +2 index record.
+            //         --i;
+            //         ++count;
+            //     }
+            // }
+        }
+        else 
         {
             System.out.println("Incorrect DELETE Command");
             return;
         }
-        String tableName = commands[2];
-        if(!tableExists(tableName)) 
-        {
-            System.out.println(tableName + " doesn't exists");
-            return;
-        }
-        if(tableDetails.get(tableName) == null)
-        {
-            loadTables(tableName);
-        }
-        List<String> headRow = tableSchema.get(tableName);
-        boolean columnExist = false;
-        int indexColumnNo = 0;
-        System.out.println(headRow);
-        System.out.println(headRow);
-        for(indexColumnNo=0;indexColumnNo<headRow.size()/2;++indexColumnNo)
-        {
-            if(headRow.get(2*indexColumnNo).equals(commands[4]))
-            {
-                columnExist = true;
-                break;
-            }
-        }
-        if(!columnExist)
-        {
-            System.out.println(commands[4]+" doesn't exists in table "+tableName);
-            return;
-        }
-        List<String> tableRows = tableDetails.get(tableName);
-        int count = 0;
-        System.out.println(tableRows);
-        String condition = commands[6].substring(0,commands[6].length()-1);
-        for(int i=0;i<tableRows.size();++i)
-        {
-            System.out.println(i);
-            String[] temp = tableRows.get(i).split("#");
-            for(int j=0;j<temp.length;++j)
-            {
-                System.out.println(temp[j]);
-            }
-            // System.out.println(temp.length);
-            if(condition.equals(temp[indexColumnNo]))
-            {
-                System.out.println("Match Found");
-                tableDetails.get(tableName).remove(i);
-                // --i because the size of tableRow gets reduced by 1 when a record is removed from ArrayList
-                // and hence it skips the next record and goes to the +2 index record.
-                --i;
-                ++count;
-            }
-        }
-        System.out.println("Count is "+count);
-        if(count != 0)
-        {
-            List<String> tableRow = tableDetails.get(tableName);
-            String rowDetails="";
-            for(int i=0;i<tableRow.size();++i)
-            {
-                rowDetails+=tableRow.get(i)+"\n";
-            }
-            String fileName=tableName+".txt";
-            try {
-                BufferedWriter fileWriter = new BufferedWriter(new FileWriter(fileName));
-                fileWriter.write(rowDetails);
-                System.out.println(count + " rows deleted Successfully in " + tableName);
-                fileWriter.close();
-            } catch (IOException e) {
-                System.out.println("Error occurred while deleting rows in " + tableName);
-                e.printStackTrace();
-            }
-        } 
-        else {
-            System.out.println("No Row deleted");
-        }
+
+        // System.out.println("Count is "+count);
+        // if(count != 0)
+        // {
+        //     List<String> tableRow = tableDetails.get(tableName);
+        //     String rowDetails="";
+        //     for(int i=0;i<tableRow.size();++i)
+        //     {
+        //         rowDetails+=tableRow.get(i)+"\n";
+        //     }
+        //     String fileName=tableName+".txt";
+        //     try {
+        //         BufferedWriter fileWriter = new BufferedWriter(new FileWriter(fileName));
+        //         fileWriter.write(rowDetails);
+        //         System.out.println(count + " rows deleted Successfully in " + tableName);
+        //         fileWriter.close();
+        //     } catch (IOException e) {
+        //         System.out.println("Error occurred while deleting rows in " + tableName);
+        //         e.printStackTrace();
+        //     }
+        // } 
+        // else {
+        //     System.out.println("No Row deleted");
+        // }
+        
     }
 
     public static void Update(String[] commands)

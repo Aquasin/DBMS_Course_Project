@@ -22,7 +22,7 @@ class FellowshipDatabase {
         utils.printDate();
         utils.createFile("schema.txt");
         utils.loadTableSchema();
-
+        
         Scanner readUserInputs = new Scanner(System.in);
         // System.out.print("# - ");
         // System.out.print(ANSI_RED + "Fellowship> " + ANSI_RESET);
@@ -32,7 +32,11 @@ class FellowshipDatabase {
 
         while(!commands[0].equals("quit"))
         {
-            if(sqlCommand.charAt(sqlCommand.length()-1) != ';')
+            if(commands[0].length() == 0)
+            {
+                System.out.println("Enter SQL Command");
+            }
+            else if(sqlCommand.charAt(sqlCommand.length()-1) != ';')
             {
                 System.out.println("Semicolon Missing");
             }
