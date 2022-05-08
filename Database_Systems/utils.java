@@ -492,7 +492,6 @@ public class utils {
         }
         //* To remove the ending ;
         commands[commands.length - 1] = commands[commands.length - 1].substring(0,commands[commands.length - 1].length()-1);
-        // System.out.println(commands[commands.length - 1]);
         
         int indexFrom = commands.length;
         int indexWhere = commands.length;
@@ -520,13 +519,6 @@ public class utils {
             return;
         }
 
-        //* Did not consider 1 column name given
-        // if(indexFrom == 2 && !commands[1].equals("*"))
-        // {
-        //     System.out.println("Incorrect SELECT Command");
-        //     return;
-        // }
-
         String tableName = commands[indexFrom+1];
         if(!tableExists(tableName)) 
         {
@@ -543,7 +535,8 @@ public class utils {
         boolean conditionOR=false;
         List<Integer> columnIndexes = new ArrayList<Integer>();
         List<Integer> conditionColumnIndexes = new ArrayList<Integer>();
-        List<String> conditions = new ArrayList<String>();
+        List<String> conditionOperator = new ArrayList<String>();
+        List<String> conditionList = new ArrayList<String>();
         //* This means FROM keyword is at index 2 and all columns have to be considered
         if(indexFrom == 2 && commands[1].equals("*"))
         {
@@ -577,7 +570,8 @@ public class utils {
                     {
                         columnExist = true;
                         conditionColumnIndexes.add(indexColumnNo/2);
-                        conditions.add(commands[i+2]);
+                        conditionOperator.add(commands[i+1]);
+                        conditionList.add(commands[i+2]);
                         break;
                     }
                 }
@@ -619,38 +613,83 @@ public class utils {
                     for(int j=0;j<conditionColumnIndexes.size();++j)
                     {
                         // 8, 12, 16
-                        // System.out.println(tableArray[conditionColumnIndexes.get(j)]);
-                        // System.out.println(conditions.get(j));
                         //* AND condition
                         if(conditionAND == true)
                         {
-                            if(!conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            if(conditionOperator.get(j).equals("="))
                             {
-                                // rowDisplay += String.format("%-10s ",tableArray[i]);
-                                displayRow = false;
+                                if(!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    displayRow = false;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))))
+                                {
+                                    displayRow = false;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))))
+                                {
+                                    displayRow = false;
+                                }
                             }
                         }
                         //* OR condition
                         else if(conditionOR == true)
                         {
-                            if(conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            if(conditionOperator.get(j).equals("="))
                             {
-                                // rowDisplay += String.format("%-10s ",tableArray[i]);
-                                displayRow = true;
+                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    displayRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
+                                {
+                                    displayRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
+                                {
+                                    displayRow = true;
+                                }
                             }
                         }
                         //* Neither AND nor OR. Only 1 condition
                         else 
                         {
-                            if(conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            if(conditionOperator.get(j).equals("="))
                             {
-                                // rowDisplay += String.format("%-10s ",tableArray[i]);
-                                displayRow = true;
+                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    displayRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
+                                {
+                                    displayRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
+                                {
+                                    displayRow = true;
+                                }
                             }
 
                         }
                     }
-                    // System.out.print(String.format("%-10s ",tableArray[j]));
                 }
                 //* Condition doesn't exists so display all the rows
                 else 
@@ -683,8 +722,6 @@ public class utils {
             
             for(int i=1;i<indexFrom;++i)
             {
-                // System.out.println(i);
-                // System.out.println(commands[i]);
                 if(i%2 == 0)
                 {
                     if(!commands[i].equals(","))
@@ -694,13 +731,10 @@ public class utils {
                     }
                 } else {
                     boolean columnExist = false;
-                    // System.out.println(tableHeader);
                     for(int j=0;j<tableHeader.size();j+=2) 
                     {
                         if(commands[i].equals(tableHeader.get(j)))
                         {
-                            // System.out.println(i);
-                            // System.out.println(j);
                             columnIndexes.add(j/2);
                             columnExist = true;
                             break;
@@ -739,7 +773,8 @@ public class utils {
                     {
                         columnExist = true;
                         conditionColumnIndexes.add(indexColumnNo/2);
-                        conditions.add(commands[i+2]);
+                        conditionOperator.add(commands[i+1]);
+                        conditionList.add(commands[i+2]);
                         break;
                     }
                 }
@@ -779,36 +814,84 @@ public class utils {
                 {
                     for(int j=0;j<conditionColumnIndexes.size();++j)
                     {
+                        // 8, 12, 16
                         //* AND condition
                         if(conditionAND == true)
                         {
-                            if(!conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            if(conditionOperator.get(j).equals("="))
                             {
-                                // rowDisplay += String.format("%-10s ",tableArray[i]);
-                                displayRow = false;
+                                if(!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    displayRow = false;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))))
+                                {
+                                    displayRow = false;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))))
+                                {
+                                    displayRow = false;
+                                }
                             }
                         }
                         //* OR condition
                         else if(conditionOR == true)
                         {
-                            if(conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            if(conditionOperator.get(j).equals("="))
                             {
-                                // rowDisplay += String.format("%-10s ",tableArray[i]);
-                                displayRow = true;
+                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    displayRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
+                                {
+                                    displayRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
+                                {
+                                    displayRow = true;
+                                }
                             }
                         }
                         //* Neither AND nor OR. Only 1 condition
                         else 
                         {
-                            if(conditions.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                            if(conditionOperator.get(j).equals("="))
                             {
-                                // rowDisplay += String.format("%-10s ",tableArray[i]);
-                                displayRow = true;
+                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    displayRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
+                                {
+                                    displayRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
+                                {
+                                    displayRow = true;
+                                }
                             }
 
                         }
                     }
-                    // System.out.print(String.format("%-10s ",tableArray[j]));
                 }
                 //* Condition doesn't exists so display all the rows
                 else 
@@ -834,10 +917,13 @@ public class utils {
     {
         int count = 0;
         String tableName;
+		//* To remove the ending ;
+		commands[commands.length - 1] = commands[commands.length - 1].substring(0,commands[commands.length - 1].length()-1);
+		// System.out.println(commands[commands.length - 1]);
         //* 3 becuase DELETE FROM TABLE_NAME; which deletes all the records of the table
         if(commands.length == 3 && commands[1].equals("FROM"))
         {
-            tableName = commands[2].substring(0,commands[2].length()-1);
+            tableName = commands[2];
             if(!tableExists(tableName)) 
             {
                 System.out.println(tableName + " doesn't exists");
@@ -861,7 +947,7 @@ public class utils {
         }
         
         //* 7 becuase DELETE FROM TABLE_NAME WHERE ID = 2;
-        else if(commands.length >= 7 || (commands[1].equals("FROM") && commands[3].equals("WHERE")))
+        else if(commands.length >= 7 && (commands[1].equals("FROM") && commands[3].equals("WHERE")))
         {
             tableName = commands[2];
             if(!tableExists(tableName)) 
@@ -873,30 +959,44 @@ public class utils {
             {
                 loadTables(tableName);
             }
-            List<String> headRow = tableSchema.get(tableName);
+            List<String> tableHeader = tableSchema.get(tableName);
             // int indexColumnNo = 0;
-            List<Integer> columnIndexes = new ArrayList<Integer>();
+			boolean conditionAND=false;
+			boolean conditionOR=false;
+			List<Integer> conditionColumnIndexes = new ArrayList<Integer>();
+			List<String> conditionOperator = new ArrayList<String>();
+			List<String> conditionList = new ArrayList<String>();
             //* DELETE FROM STUDENT WHERE NAME = Vivek; - 4 to 6
             //* DELETE FROM STUDENT WHERE NAME = Vivek AND ID = 1 AND SAL = 30; - 4 to 14
             // System.out.println(headRow);
-            for(int i=4;i<commands.length;i+=4)
+			for(int i=4;i<commands.length;i+=4)
             {
                 //* AND OR postions 7, 11, 15
                 if(i+3 < commands.length)
                 {
-                    if(!(commands[i+3].equals("AND") || commands[i+3].equals("OR")))
+                    if(commands[i+3].equals("AND"))
+                    {
+                        conditionAND = true;
+                    }
+                    else if(commands[i+3].equals("OR"))
+                    {
+                        conditionOR = true;
+                    }
+                    else
                     {
                         System.out.println("Expected AND or OR keyword");
                         return;
                     }
                 }
                 boolean columnExist = false;
-                for(int indexColumnNo=0;indexColumnNo<headRow.size();indexColumnNo+=2)
+                for(int indexColumnNo=0;indexColumnNo<tableHeader.size();indexColumnNo+=2)
                 {
-                    if(headRow.get(indexColumnNo).equals(commands[i]))
+                    if(tableHeader.get(indexColumnNo).equals(commands[i]))
                     {
                         columnExist = true;
-                        columnIndexes.add(indexColumnNo/2);
+                        conditionColumnIndexes.add(indexColumnNo/2);
+                        conditionOperator.add(commands[i+1]);
+                        conditionList.add(commands[i+2]);
                         break;
                     }
                 }
@@ -906,29 +1006,126 @@ public class utils {
                     return;
                 }
             }
-            // List<String> tableRows = tableDetails.get(tableName);
-            
-            // System.out.println(tableRows);
-            // String condition = commands[6].substring(0,commands[6].length()-1);
-            // for(int i=0;i<tableRows.size();++i)
+
+			// if(conditionColumnIndexes.size() != 0)
             // {
-            //     System.out.println(i);
-            //     String[] temp = tableRows.get(i).split("#");
-            //     // for(int j=0;j<temp.length;++j)
-            //     // {
-            //     //     System.out.println(temp[j]);
-            //     // }
-            //     // System.out.println(temp.length);
-            //     if(condition.equals(temp[indexColumnNo]))
+            //     for(int i=0;i<conditionColumnIndexes.size();++i)
             //     {
-            //         System.out.println("Match Found");
-            //         tableDetails.get(tableName).remove(i);
-            //         // --i because the size of tableRow gets reduced by 1 when a record is removed from ArrayList
-            //         // and hence it skips the next record and goes to the +2 index record.
-            //         --i;
-            //         ++count;
+            //         System.out.println(conditionColumnIndexes.get(i) + " " + tableHeader.get(conditionColumnIndexes.get(i)*2));
             //     }
             // }
+
+			// 1#Gaurav#gaurav@gmail.com
+            for(int tableRow=0;tableRow<tableDetails.get(tableName).size();++tableRow) 
+            {
+                String[] tableArray = tableDetails.get(tableName).get(tableRow).split("#");
+                String rowDisplay = "";
+                boolean deleteRow = false;
+                if(conditionAND == true)
+                {
+                    deleteRow = true;
+                }
+                // 1, Gaurav, gaurav@gmail.com
+                //* Condition exists 
+                if(conditionColumnIndexes.size() != 0)
+                {
+                    for(int j=0;j<conditionColumnIndexes.size();++j)
+                    {
+                        // 7, 11, 15
+                        // System.out.println(tableArray[conditionColumnIndexes.get(j)]);
+                        // System.out.println(conditionList.get(j));
+                        //* AND condition
+                        if(conditionAND == true)
+                        {
+                            if(conditionOperator.get(j).equals("="))
+                            {
+                                if(!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    deleteRow = false;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))))
+                                {
+                                    deleteRow = false;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))))
+                                {
+                                    deleteRow = false;
+                                }
+                            }
+                        }
+                        //* OR condition
+                        else if(conditionOR == true)
+                        {
+                            if(conditionOperator.get(j).equals("="))
+                            {
+                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    deleteRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
+                                {
+                                    deleteRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
+                                {
+                                    deleteRow = true;
+                                }
+                            }
+                        }
+                        //* Neither AND nor OR. Only 1 condition
+                        else 
+                        {
+                            if(conditionOperator.get(j).equals("="))
+                            {
+                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    deleteRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
+                                {
+                                    deleteRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
+                                {
+                                    deleteRow = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                //* Condition doesn't exists so display all the rows
+                else 
+                {
+                    deleteRow = false;
+                }
+                if(deleteRow)
+                {
+					// System.out.println("Match Found");
+                    tableDetails.get(tableName).remove(tableRow);
+                    // --tableRow because the size of tableRow gets reduced by 1 when a record is removed from ArrayList
+                    // and hence it skips the next record and goes to the +2 index record.
+                    --tableRow;
+                    ++count;
+                }
+            }
         }
         else 
         {
@@ -936,29 +1133,29 @@ public class utils {
             return;
         }
 
-        // System.out.println("Count is "+count);
-        // if(count != 0)
-        // {
-        //     List<String> tableRow = tableDetails.get(tableName);
-        //     String rowDetails="";
-        //     for(int i=0;i<tableRow.size();++i)
-        //     {
-        //         rowDetails+=tableRow.get(i)+"\n";
-        //     }
-        //     String fileName=tableName+".txt";
-        //     try {
-        //         BufferedWriter fileWriter = new BufferedWriter(new FileWriter(fileName));
-        //         fileWriter.write(rowDetails);
-        //         System.out.println(count + " rows deleted Successfully in " + tableName);
-        //         fileWriter.close();
-        //     } catch (IOException e) {
-        //         System.out.println("Error occurred while deleting rows in " + tableName);
-        //         e.printStackTrace();
-        //     }
-        // } 
-        // else {
-        //     System.out.println("No Row deleted");
-        // }
+        System.out.println("Count is "+count);
+        if(count != 0)
+        {
+            List<String> tableRow = tableDetails.get(tableName);
+            String rowDetails="";
+            for(int i=0;i<tableRow.size();++i)
+            {
+                rowDetails+=tableRow.get(i)+"\n";
+            }
+            String fileName=tableName+".txt";
+            try {
+                BufferedWriter fileWriter = new BufferedWriter(new FileWriter(fileName));
+                fileWriter.write(rowDetails);
+                System.out.println(count + " rows deleted Successfully in " + tableName);
+                fileWriter.close();
+            } catch (IOException e) {
+                System.out.println("Error occurred while deleting rows in " + tableName);
+                e.printStackTrace();
+            }
+        } 
+        else {
+            System.out.println("No Row deleted");
+        }
         
     }
 
