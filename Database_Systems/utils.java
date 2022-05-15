@@ -1155,44 +1155,326 @@ public class utils {
         } 
         else {
             System.out.println("No Row deleted");
-        }
-        
+        }        
     }
 
     public static void Update(String[] commands)
     {
-        //* 10 becuase UPDATE TABLE_NAME SET ATTRIBUTE_NAME1 = ATTRIBUTE_VALUE1 WHERE ATTRIBUTE_NAME2 = ATTRIBUTE_VALUE2;
-        if(commands.length < 10 || !(commands[2].equals("SET") && commands[6].equals("WHERE")))
+        int count = 0;
+        String tableName;
+		//* To remove the ending ;
+		commands[commands.length - 1] = commands[commands.length - 1].substring(0,commands[commands.length - 1].length()-1);
+        // System.out.println(commands[commands.length - 1]);
+        int whereIndex = commands.length;
+        for(int i=0;i<commands.length;++i)
+        {
+            if(commands[i].equals("WHERE"))
+            {
+                whereIndex = i;
+                break;
+            }
+        }
+        //* UPDATE CUSTOMER SET NAME = 'Alfred';
+        //* UPDATE CUSTOMER SET NAME = 'Alfred' , EMAIL = 'shashank@gmail.com';
+        if(commands.length>5 && commands[2].equals("SET") && whereIndex == commands.length)
+        {
+            tableName = commands[1];
+            if(!tableExists(tableName)) 
+            {
+                System.out.println(tableName + " doesn't exists");
+                return;
+            }
+            if(tableDetails.get(tableName) == null)
+            {
+                loadTables(tableName);
+            }
+            List<String> tableHeader = tableSchema.get(tableName);
+            List<Integer> updateColumnIndexes = new ArrayList<Integer>();
+			List<String> updateList = new ArrayList<String>();
+            for(int i=3;i<commands.length;i+=4)
+            {
+                if(!commands[i+1].equals("="))
+                {
+                    System.out.println("Expected =");
+                    return;
+                }
+
+                boolean columnExist = false;
+                for(int indexColumnNo=0;indexColumnNo<tableHeader.size();indexColumnNo+=2)
+                {
+                    if(tableHeader.get(indexColumnNo).equals(commands[i]))
+                    {
+                        columnExist = true;
+                        updateColumnIndexes.add(indexColumnNo/2);
+                        updateList.add(commands[i+2]);
+                        break;
+                    }
+                }
+                if(!columnExist)
+                {
+                    System.out.println(commands[i]+" doesn't exists in table "+tableName);
+                    return;
+                }
+            }
+            if(updateColumnIndexes.size() != 0)
+            {
+                for(int i=0;i<updateColumnIndexes.size();++i)
+                {
+                    System.out.println(updateColumnIndexes.get(i) + " " + tableHeader.get(updateColumnIndexes.get(i)*2) + " " + updateList.get(i));
+                }
+            }
+
+            // 1#Gaurav#gaurav@gmail.com
+            for(int tableRow=0;tableRow<tableDetails.get(tableName).size();++tableRow) 
+            {
+                String[] tableArray = tableDetails.get(tableName).get(tableRow).split("#");
+                String updatedRow = "";
+                // tableDetails.get(tableName)
+                for(int j=0;j<updateColumnIndexes.size();++j)
+                {
+                    tableArray[updateColumnIndexes.get(j)] = updateList.get(j);
+                }
+                for(int i=0;i<tableArray.length;++i)
+                {
+                    updatedRow+=tableArray[i]+"#";
+                }
+                //* To remove extra # at back
+                updatedRow = updatedRow.substring(0,updatedRow.length()-1);
+                tableDetails.get(tableName).set(tableRow, updatedRow);
+                ++count;
+            }
+        } 
+        //* 10 becuase UPDATE CUSTOMER SET NAME = Alfred WHERE ID = 1;
+        else if(commands.length > 9 && commands[2].equals("SET") && whereIndex != commands.length)
+        {
+            tableName = commands[1];
+            if(!tableExists(tableName)) 
+            {
+                System.out.println(tableName + " doesn't exists");
+                return;
+            }
+            if(tableDetails.get(tableName) == null)
+            {
+                loadTables(tableName);
+            }
+
+            //* 
+            boolean conditionAND=false;
+			boolean conditionOR=false;
+            List<String> tableHeader = tableSchema.get(tableName);
+            List<Integer> updateColumnIndexes = new ArrayList<Integer>();
+			List<String> updateList = new ArrayList<String>();
+            List<Integer> conditionColumnIndexes = new ArrayList<Integer>();
+            List<String> conditionOperator = new ArrayList<String>();
+			List<String> conditionList = new ArrayList<String>();
+
+            //* For checking if the update columns exists or not
+            for(int i=3;i<whereIndex;i+=4)
+            {
+                if(!commands[i+1].equals("="))
+                {
+                    System.out.println("Expected =");
+                    return;
+                }
+
+                boolean columnExist = false;
+                for(int indexColumnNo=0;indexColumnNo<tableHeader.size();indexColumnNo+=2)
+                {
+                    if(tableHeader.get(indexColumnNo).equals(commands[i]))
+                    {
+                        columnExist = true;
+                        updateColumnIndexes.add(indexColumnNo/2);
+                        updateList.add(commands[i+2]);
+                        break;
+                    }
+                }
+                if(!columnExist)
+                {
+                    System.out.println(commands[i]+" doesn't exists in table "+tableName);
+                    return;
+                }
+            }
+
+            //* For checking if the condition columns exists or not
+            for(int i=whereIndex+1;i<commands.length;i+=4)
+            {
+                //* AND OR postions 7, 11, 15
+                if(i+3 < commands.length)
+                {
+                    if(commands[i+3].equals("AND"))
+                    {
+                        conditionAND = true;
+                    }
+                    else if(commands[i+3].equals("OR"))
+                    {
+                        conditionOR = true;
+                    }
+                    else
+                    {
+                        System.out.println("Expected AND or OR keyword");
+                        return;
+                    }
+                }
+                boolean columnExist = false;
+                for(int indexColumnNo=0;indexColumnNo<tableHeader.size();indexColumnNo+=2)
+                {
+                    if(tableHeader.get(indexColumnNo).equals(commands[i]))
+                    {
+                        columnExist = true;
+                        conditionColumnIndexes.add(indexColumnNo/2);
+                        conditionOperator.add(commands[i+1]);
+                        conditionList.add(commands[i+2]);
+                        break;
+                    }
+                }
+                if(!columnExist)
+                {
+                    System.out.println(commands[i]+" doesn't exists in table "+tableName);
+                    return;
+                }
+            }
+
+            for(int tableRow=0;tableRow<tableDetails.get(tableName).size();++tableRow) 
+            {
+                String[] tableArray = tableDetails.get(tableName).get(tableRow).split("#");
+                String updatedRow = "";
+                boolean updateRow = false;
+                if(conditionAND == true)
+                {
+                    updateRow = true;
+                }
+                // 1, Gaurav, gaurav@gmail.com
+                //* Condition exists 
+                if(conditionColumnIndexes.size() != 0)
+                {
+                    for(int j=0;j<conditionColumnIndexes.size();++j)
+                    {
+                        // 7, 11, 15
+                        // System.out.println(tableArray[conditionColumnIndexes.get(j)]);
+                        // System.out.println(conditionList.get(j));
+                        //* AND condition
+                        if(conditionAND == true)
+                        {
+                            if(conditionOperator.get(j).equals("="))
+                            {
+                                if(!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    updateRow = false;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))))
+                                {
+                                    updateRow = false;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))))
+                                {
+                                    updateRow = false;
+                                }
+                            }
+                        }
+                        //* OR condition
+                        else if(conditionOR == true)
+                        {
+                            if(conditionOperator.get(j).equals("="))
+                            {
+                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    updateRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
+                                {
+                                    updateRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
+                                {
+                                    updateRow = true;
+                                }
+                            }
+                        }
+                        //* Neither AND nor OR. Only 1 condition
+                        else 
+                        {
+                            if(conditionOperator.get(j).equals("="))
+                            {
+                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
+                                {
+                                    updateRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals("<"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
+                                {
+                                    updateRow = true;
+                                }
+                            }
+                            else if(conditionOperator.get(j).equals(">"))
+                            {
+                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
+                                {
+                                    updateRow = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                //* Check if condition matches. If yes then update the row.
+                if(updateRow)
+                {
+                    for(int j=0;j<updateColumnIndexes.size();++j)
+                    {
+                        tableArray[updateColumnIndexes.get(j)] = updateList.get(j);
+                    }
+                    for(int i=0;i<tableArray.length;++i)
+                    {
+                        updatedRow+=tableArray[i]+"#";
+                    }
+                    //* To remove extra # at back
+                    updatedRow = updatedRow.substring(0,updatedRow.length()-1);
+                    tableDetails.get(tableName).set(tableRow, updatedRow);
+                    ++count;
+                }
+            }
+
+        }
+        else
         {
             System.out.println("Incorrect UPDATE Command");
-        }
-        String tableName = commands[1];
-        if(!tableExists(tableName)) 
-        {
-            System.out.println(tableName + " doesn't exists");
             return;
         }
-        if(tableDetails.get(tableName) == null)
+        System.out.println("Count is "+count);
+        if(count != 0)
         {
-            loadTables(tableName);
-        }
-        List<String> headRow = tableSchema.get(tableName);
-        Boolean attributeNameChange=false,attributeNameIdentifier=false;
-        for(String colName : headRow)
-        {
-            if(colName.equals(commands[3]))
+            List<String> tableRow = tableDetails.get(tableName);
+            String rowDetails="";
+            for(int i=0;i<tableRow.size();++i)
             {
-                attributeNameChange = true;
+                rowDetails+=tableRow.get(i)+"\n";
             }
-            if(colName.equals(commands[7]))
-            {
-                attributeNameIdentifier = true;
+            String fileName=tableName+".txt";
+            try {
+                BufferedWriter fileWriter = new BufferedWriter(new FileWriter(fileName));
+                fileWriter.write(rowDetails);
+                System.out.println(count + " rows updated Successfully in " + tableName);
+                fileWriter.close();
+            } catch (IOException e) {
+                System.out.println("Error occurred while updating rows in " + tableName);
+                e.printStackTrace();
             }
-        }
-        if(!(attributeNameChange && attributeNameIdentifier))
-        {
-            System.out.println("Unknown Attribute name");
-            return;
+        } 
+        else {
+            System.out.println("No Row Updated");
         }
     }
 }

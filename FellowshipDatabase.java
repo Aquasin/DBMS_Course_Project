@@ -77,12 +77,12 @@ class FellowshipDatabase {
             }
             else if(commands[0].equals("DELETE"))
             {
-                System.out.println("DELETE Running");
+                // System.out.println("DELETE Running");
                 utils.Delete(commands);
             }
             else if(commands[0].equals("UPDATE"))
             {
-                System.out.println("UPDATE Running");
+                // System.out.println("UPDATE Running");
                 utils.Update(commands);
             }
             else {

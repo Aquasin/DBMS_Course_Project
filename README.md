@@ -44,19 +44,19 @@ INSERT INTO TABLE_NAME VALUES ( 'hello' , 20);
 
 <ul>
 <li>
-CREATE (DONE, Constraints Remaning like Unique, PK, Not Null and Check)
+CREATE (DONE)
 </li>
 <li>
-SELECT (DONE {Only for = . < and > remaining}, But do refactoring as code is duplicate in multiple places)
+SELECT (But do refactoring as code is duplicate in multiple places)
 </li>
 <li>
-INSERT (DONE, Checking Constraints remaining)
+INSERT (DONE)
 </li>
 <li>
-UPDATE (Done, Checking Multiple AND & OR Statement Remaining)
+UPDATE (But do refactoring as code is duplicate in multiple places)
 </li>
 <li>
-DELETE (Done, Checking Multiple AND & OR Statement Remaining)
+DELETE (But do refactoring as code is duplicate in multiple places)
 </li>
 <li>
 DROP (DONE)
@@ -69,5 +69,24 @@ QUIT (DONE)
 </li>
 <li>
 CLEAR (DONE)
+</li>
+</ul>
+
+## Things to do for extra marks:
+
+Ask Ma'am
+
+<ul>
+<li>
+ALTER Command 
+<br/>
+Add and Drop Column 
+</li>
+<li>
+Constraints like Unique, PK, Not Null and Check
+<li>
+Multiple conditions for select (AND,OR)
+<br/>
+e.g SELECT * FROM CUSTOMER WHERE ID < 2 OR NAME = XYZ AND SAL < 30000;
 </li>
 </ul>
