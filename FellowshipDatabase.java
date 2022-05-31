@@ -27,10 +27,10 @@ class FellowshipDatabase {
         // System.out.print("# - ");
         // System.out.print(ANSI_RED + "Fellowship> " + ANSI_RESET);
         System.out.print("Fellowship> ");
-        String sqlCommand = readUserInputs.nextLine();
+        String sqlCommand = readUserInputs.nextLine().toUpperCase();
         String[] commands = sqlCommand.split(" ");
 
-        while(!commands[0].equals("quit"))
+        while(!commands[0].equals("QUIT"))
         {
             if(commands[0].length() == 0)
             {
@@ -85,12 +85,18 @@ class FellowshipDatabase {
                 // System.out.println("UPDATE Running");
                 utils.Update(commands);
             }
+            else if(commands[0].equals("ALTER"))
+            {
+                // System.out.println("UPDATE Running");
+                utils.Alter(commands);
+            }
             else {
                 System.out.println("Incorrect Command");
             }
             //* Prompt
             System.out.print("Fellowship> ");
-            sqlCommand = readUserInputs.nextLine();
+            sqlCommand = readUserInputs.nextLine().toUpperCase();
+            // System.out.println(sqlCommand);
             commands = sqlCommand.split(" ");
         }
         readUserInputs.close();

@@ -42,7 +42,8 @@ public class utils {
         tableLengthCount = new HashMap<String,Integer>();
         MAX_TABLE_LENGTH=0;
 
-        try {
+        try 
+        {
             File schemaFile = new File("schema.txt");
             Scanner fileContents = new Scanner(schemaFile);
             while (fileContents.hasNextLine())
@@ -76,7 +77,8 @@ public class utils {
             // System.out.println(tableSchema);
 
             fileContents.close();
-        } catch(FileNotFoundException e)
+        } 
+        catch(FileNotFoundException e)
         {
             System.out.println("Error occurred Displaying Tables");
             e.printStackTrace();
@@ -109,11 +111,7 @@ public class utils {
     //* To check if a table with the given name exists 
     private static Boolean tableExists(String tableName)
     {
-        if(tableSchema.get(tableName) != null)
-        {
-            return true;
-        }
-        return false;
+        return tableSchema.get(tableName) != null;
     }
 
     //* To create a file
@@ -147,7 +145,7 @@ public class utils {
         try {
             new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
         } 
-        //* | (Pipe) used for catching multiple expections in a single catch block
+        //* | (Pipe) used for catching multiple exceptions in a single catch block
         catch (InterruptedException | IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -259,12 +257,12 @@ public class utils {
     public static void Drop(String[] commands)
     {
         //TODO: Error Checking remaining
-        if(commands.length != 2)
+        if(commands.length != 3 || !commands[1].equals("TABLE"))
         {
             System.out.println("Incorrect DROP Command");
             return;
         } 
-        String tableName = commands[1].substring(0,commands[1].length() - 1);
+        String tableName = commands[2].substring(0,commands[1].length() - 1);
         if(!tableExists(tableName)) 
         {
             System.out.println(tableName + " doesn't exists");
@@ -306,7 +304,7 @@ public class utils {
     
     public static void Help(String[] commands)
     {
-        //TODO: Yet to add CMD for help in list of cmds
+        //TODO: Yet to add CMD for help in list of Commands
         if(commands.length != 2) 
         {
             System.out.println("Incorrect HELP Command");
@@ -406,7 +404,7 @@ public class utils {
         }
         String rowDetails="";
         List<String> headRow = tableSchema.get(tableName);
-        // System.out.println(headRow);
+        System.out.println(headRow);
         if(attributeValues.length != headRow.size()/2)
         {
             System.out.println("Insufficient Attributes");
@@ -437,7 +435,9 @@ public class utils {
             }
             else if(headRow.get(2*i+1).equals("INT"))
             {
-                if(isNumeric(attributeValues[i]))
+                // System.out.println(attributeValues[i]);
+                //* For String Like '3' This will accept it as INT. If want to change this then in the isString() regex add 0-9
+                if(isNumeric(attributeValues[i]) && !isString(attributeValues[i]))
                 {
                     rowDetails+=attributeValues[i]+"#";
                 }
@@ -478,13 +478,12 @@ public class utils {
             System.out.println("Error occurred while adding Row in " + tableName);
             e.printStackTrace();
         }
-        
     }
 
     public static void Select(String[] commands)
     {
         //* Error checking in Select Command
-        //* 4 becuase SELECT * FROM STUDENT;
+        //* 4 because SELECT * FROM STUDENT;
         if(commands.length < 4)
         {
             System.out.println("Incorrect SELECT Command");
@@ -546,7 +545,7 @@ public class utils {
             // SELECT * FROM STUDENT WHERE NAME = Hello AND ID = 2 AND SAL = 30; - 5 to 15
             for(int i=5;i<commands.length;i+=4)
             {
-                //* AND OR postions 8, 12, 16
+                //* AND OR positions 8, 12, 16
                 if(i+3 < commands.length)
                 {
                     if(commands[i+3].equals("AND"))
@@ -584,9 +583,8 @@ public class utils {
             
             if(conditionColumnIndexes.size() != 0)
             {
-                for(int i=0;i<conditionColumnIndexes.size();++i)
-                {
-                    System.out.println(conditionColumnIndexes.get(i) + " " + tableHeader.get(conditionColumnIndexes.get(i)*2));
+                for (Integer conditionColumnIndex : conditionColumnIndexes) {
+                    System.out.println(conditionColumnIndex + " " + tableHeader.get(conditionColumnIndex * 2));
                 }
             }
             
@@ -602,7 +600,7 @@ public class utils {
                 String[] tableArray = tableRow.split("#");
                 String rowDisplay = "";
                 boolean displayRow = false;
-                if(conditionAND == true)
+                if(conditionAND)
                 {
                     displayRow = true;
                 }
@@ -614,93 +612,85 @@ public class utils {
                     {
                         // 8, 12, 16
                         //* AND condition
-                        if(conditionAND == true)
+                        if(conditionAND)
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    displayRow = false;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))))
-                                {
-                                    displayRow = false;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))))
-                                {
-                                    displayRow = false;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        displayRow = false;
+                                    }
+                                    break;
+                                case "<":
+                                    if (!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))) {
+                                        displayRow = false;
+                                    }
+                                    break;
+                                case ">":
+                                    if (!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))) {
+                                        displayRow = false;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                         //* OR condition
-                        else if(conditionOR == true)
+                        else if(conditionOR)
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    displayRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
-                                {
-                                    displayRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
-                                {
-                                    displayRow = true;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                case "<":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                case ">":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                         //* Neither AND nor OR. Only 1 condition
                         else 
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    displayRow = true;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                case "<":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                case ">":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
-                                {
-                                    displayRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
-                                {
-                                    displayRow = true;
-                                }
-                            }
-
                         }
                     }
                 }
-                //* Condition doesn't exists so display all the rows
+                //* Condition doesn't exist so display all the rows
                 else 
                 {
                     displayRow = true;
                 }
                 if(displayRow)
                 {
-                    for(int i=0;i<tableArray.length;++i)
-                    {
-                        rowDisplay += String.format("%-10s ",tableArray[i]);
+                    for (String s : tableArray) {
+                        rowDisplay += String.format("%-10s ", s);
                     }
                 }
                 if(displayRow)
@@ -787,9 +777,8 @@ public class utils {
 
             if(conditionColumnIndexes.size() != 0)
             {
-                for(int i=0;i<conditionColumnIndexes.size();++i)
-                {
-                    System.out.println(conditionColumnIndexes.get(i) + " " + tableHeader.get(conditionColumnIndexes.get(i)*2));
+                for (Integer conditionColumnIndex : conditionColumnIndexes) {
+                    System.out.println(conditionColumnIndex + " " + tableHeader.get(conditionColumnIndex * 2));
                 }
             }
 
@@ -804,7 +793,7 @@ public class utils {
                 String[] tableArray = tableRow.split("#");
                 String rowDisplay = "";
                 boolean displayRow = false;
-                if(conditionAND == true)
+                if(conditionAND)
                 {
                     displayRow = true;
                 }
@@ -816,84 +805,77 @@ public class utils {
                     {
                         // 8, 12, 16
                         //* AND condition
-                        if(conditionAND == true)
+                        if(conditionAND)
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    displayRow = false;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))))
-                                {
-                                    displayRow = false;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))))
-                                {
-                                    displayRow = false;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        displayRow = false;
+                                    }
+                                    break;
+                                case "<":
+                                    if (!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))) {
+                                        displayRow = false;
+                                    }
+                                    break;
+                                case ">":
+                                    if (!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))) {
+                                        displayRow = false;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                         //* OR condition
-                        else if(conditionOR == true)
+                        else if(conditionOR)
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    displayRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
-                                {
-                                    displayRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
-                                {
-                                    displayRow = true;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                case "<":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                case ">":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                         //* Neither AND nor OR. Only 1 condition
                         else 
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    displayRow = true;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                case "<":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                case ">":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))) {
+                                        displayRow = true;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
-                                {
-                                    displayRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
-                                {
-                                    displayRow = true;
-                                }
-                            }
-
                         }
                     }
                 }
-                //* Condition doesn't exists so display all the rows
+                //* Condition doesn't exist so display all the rows
                 else 
                 {
                     displayRow = true;
@@ -920,7 +902,7 @@ public class utils {
 		//* To remove the ending ;
 		commands[commands.length - 1] = commands[commands.length - 1].substring(0,commands[commands.length - 1].length()-1);
 		// System.out.println(commands[commands.length - 1]);
-        //* 3 becuase DELETE FROM TABLE_NAME; which deletes all the records of the table
+        //* 3 because DELETE FROM TABLE_NAME; which deletes all the records of the table
         if(commands.length == 3 && commands[1].equals("FROM"))
         {
             tableName = commands[2];
@@ -946,7 +928,7 @@ public class utils {
             }
         }
         
-        //* 7 becuase DELETE FROM TABLE_NAME WHERE ID = 2;
+        //* 7 because DELETE FROM TABLE_NAME WHERE ID = 2;
         else if(commands.length >= 7 && (commands[1].equals("FROM") && commands[3].equals("WHERE")))
         {
             tableName = commands[2];
@@ -971,7 +953,7 @@ public class utils {
             // System.out.println(headRow);
 			for(int i=4;i<commands.length;i+=4)
             {
-                //* AND OR postions 7, 11, 15
+                //* AND OR positions 7, 11, 15
                 if(i+3 < commands.length)
                 {
                     if(commands[i+3].equals("AND"))
@@ -1019,9 +1001,8 @@ public class utils {
             for(int tableRow=0;tableRow<tableDetails.get(tableName).size();++tableRow) 
             {
                 String[] tableArray = tableDetails.get(tableName).get(tableRow).split("#");
-                String rowDisplay = "";
                 boolean deleteRow = false;
-                if(conditionAND == true)
+                if(conditionAND)
                 {
                     deleteRow = true;
                 }
@@ -1035,83 +1016,77 @@ public class utils {
                         // System.out.println(tableArray[conditionColumnIndexes.get(j)]);
                         // System.out.println(conditionList.get(j));
                         //* AND condition
-                        if(conditionAND == true)
+                        if(conditionAND)
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    deleteRow = false;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))))
-                                {
-                                    deleteRow = false;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))))
-                                {
-                                    deleteRow = false;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        deleteRow = false;
+                                    }
+                                    break;
+                                case "<":
+                                    if (!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))) {
+                                        deleteRow = false;
+                                    }
+                                    break;
+                                case ">":
+                                    if (!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))) {
+                                        deleteRow = false;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                         //* OR condition
-                        else if(conditionOR == true)
+                        else if(conditionOR)
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    deleteRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
-                                {
-                                    deleteRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
-                                {
-                                    deleteRow = true;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        deleteRow = true;
+                                    }
+                                    break;
+                                case "<":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))) {
+                                        deleteRow = true;
+                                    }
+                                    break;
+                                case ">":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))) {
+                                        deleteRow = true;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                         //* Neither AND nor OR. Only 1 condition
                         else 
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    deleteRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
-                                {
-                                    deleteRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
-                                {
-                                    deleteRow = true;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        deleteRow = true;
+                                    }
+                                    break;
+                                case "<":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))) {
+                                        deleteRow = true;
+                                    }
+                                    break;
+                                case ">":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))) {
+                                        deleteRow = true;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                     }
                 }
-                //* Condition doesn't exists so display all the rows
+                //* Condition doesn't exist so display all the rows
                 else 
                 {
                     deleteRow = false;
@@ -1138,9 +1113,8 @@ public class utils {
         {
             List<String> tableRow = tableDetails.get(tableName);
             String rowDetails="";
-            for(int i=0;i<tableRow.size();++i)
-            {
-                rowDetails+=tableRow.get(i)+"\n";
+            for (String s : tableRow) {
+                rowDetails += s + "\n";
             }
             String fileName=tableName+".txt";
             try {
@@ -1165,18 +1139,18 @@ public class utils {
 		//* To remove the ending ;
 		commands[commands.length - 1] = commands[commands.length - 1].substring(0,commands[commands.length - 1].length()-1);
         // System.out.println(commands[commands.length - 1]);
-        int whereIndex = commands.length;
+        int indexWhere = commands.length;
         for(int i=0;i<commands.length;++i)
         {
             if(commands[i].equals("WHERE"))
             {
-                whereIndex = i;
+                indexWhere = i;
                 break;
             }
         }
         //* UPDATE CUSTOMER SET NAME = 'Alfred';
         //* UPDATE CUSTOMER SET NAME = 'Alfred' , EMAIL = 'shashank@gmail.com';
-        if(commands.length>5 && commands[2].equals("SET") && whereIndex == commands.length)
+        if(commands.length>5 && commands[2].equals("SET") && indexWhere == commands.length)
         {
             tableName = commands[1];
             if(!tableExists(tableName)) 
@@ -1234,9 +1208,8 @@ public class utils {
                 {
                     tableArray[updateColumnIndexes.get(j)] = updateList.get(j);
                 }
-                for(int i=0;i<tableArray.length;++i)
-                {
-                    updatedRow+=tableArray[i]+"#";
+                for (String s : tableArray) {
+                    updatedRow += s + "#";
                 }
                 //* To remove extra # at back
                 updatedRow = updatedRow.substring(0,updatedRow.length()-1);
@@ -1244,8 +1217,8 @@ public class utils {
                 ++count;
             }
         } 
-        //* 10 becuase UPDATE CUSTOMER SET NAME = Alfred WHERE ID = 1;
-        else if(commands.length > 9 && commands[2].equals("SET") && whereIndex != commands.length)
+        //* 10 because UPDATE CUSTOMER SET NAME = Alfred WHERE ID = 1;
+        else if(commands.length > 9 && commands[2].equals("SET") && indexWhere != commands.length)
         {
             tableName = commands[1];
             if(!tableExists(tableName)) 
@@ -1269,7 +1242,7 @@ public class utils {
 			List<String> conditionList = new ArrayList<String>();
 
             //* For checking if the update columns exists or not
-            for(int i=3;i<whereIndex;i+=4)
+            for(int i=3;i<indexWhere;i+=4)
             {
                 if(!commands[i+1].equals("="))
                 {
@@ -1296,9 +1269,9 @@ public class utils {
             }
 
             //* For checking if the condition columns exists or not
-            for(int i=whereIndex+1;i<commands.length;i+=4)
+            for(int i=indexWhere+1;i<commands.length;i+=4)
             {
-                //* AND OR postions 7, 11, 15
+                //* AND OR positions 7, 11, 15
                 if(i+3 < commands.length)
                 {
                     if(commands[i+3].equals("AND"))
@@ -1339,7 +1312,7 @@ public class utils {
                 String[] tableArray = tableDetails.get(tableName).get(tableRow).split("#");
                 String updatedRow = "";
                 boolean updateRow = false;
-                if(conditionAND == true)
+                if(conditionAND)
                 {
                     updateRow = true;
                 }
@@ -1353,78 +1326,72 @@ public class utils {
                         // System.out.println(tableArray[conditionColumnIndexes.get(j)]);
                         // System.out.println(conditionList.get(j));
                         //* AND condition
-                        if(conditionAND == true)
+                        if(conditionAND)
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    updateRow = false;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))))
-                                {
-                                    updateRow = false;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))))
-                                {
-                                    updateRow = false;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (!conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        updateRow = false;
+                                    }
+                                    break;
+                                case "<":
+                                    if (!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))) {
+                                        updateRow = false;
+                                    }
+                                    break;
+                                case ">":
+                                    if (!(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))) {
+                                        updateRow = false;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                         //* OR condition
-                        else if(conditionOR == true)
+                        else if(conditionOR)
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    updateRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
-                                {
-                                    updateRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
-                                {
-                                    updateRow = true;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        updateRow = true;
+                                    }
+                                    break;
+                                case "<":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))) {
+                                        updateRow = true;
+                                    }
+                                    break;
+                                case ">":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))) {
+                                        updateRow = true;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                         //* Neither AND nor OR. Only 1 condition
                         else 
                         {
-                            if(conditionOperator.get(j).equals("="))
-                            {
-                                if(conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)]))
-                                {
-                                    updateRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals("<"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j)))
-                                {
-                                    updateRow = true;
-                                }
-                            }
-                            else if(conditionOperator.get(j).equals(">"))
-                            {
-                                if(Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j)))
-                                {
-                                    updateRow = true;
-                                }
+                            switch (conditionOperator.get(j)) {
+                                case "=":
+                                    if (conditionList.get(j).equals(tableArray[conditionColumnIndexes.get(j)])) {
+                                        updateRow = true;
+                                    }
+                                    break;
+                                case "<":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) < Integer.parseInt(conditionList.get(j))) {
+                                        updateRow = true;
+                                    }
+                                    break;
+                                case ">":
+                                    if (Integer.parseInt(tableArray[conditionColumnIndexes.get(j)]) > Integer.parseInt(conditionList.get(j))) {
+                                        updateRow = true;
+                                    }
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Unexpected value: " + conditionOperator.get(j));
                             }
                         }
                     }
@@ -1436,9 +1403,8 @@ public class utils {
                     {
                         tableArray[updateColumnIndexes.get(j)] = updateList.get(j);
                     }
-                    for(int i=0;i<tableArray.length;++i)
-                    {
-                        updatedRow+=tableArray[i]+"#";
+                    for (String s : tableArray) {
+                        updatedRow += s + "#";
                     }
                     //* To remove extra # at back
                     updatedRow = updatedRow.substring(0,updatedRow.length()-1);
@@ -1458,9 +1424,8 @@ public class utils {
         {
             List<String> tableRow = tableDetails.get(tableName);
             String rowDetails="";
-            for(int i=0;i<tableRow.size();++i)
-            {
-                rowDetails+=tableRow.get(i)+"\n";
+            for (String s : tableRow) {
+                rowDetails += s + "\n";
             }
             String fileName=tableName+".txt";
             try {
@@ -1476,5 +1441,176 @@ public class utils {
         else {
             System.out.println("No Row Updated");
         }
+    }
+
+    public static void Alter(String[] commands)
+    {
+        if(commands.length != 6 || !commands[1].equals("TABLE"))
+        {
+            System.out.println("Incorrect ALTER Command");
+            return;
+        }
+        
+        //* To remove the ending ;
+		commands[commands.length - 1] = commands[commands.length - 1].substring(0,commands[commands.length - 1].length()-1);
+        
+        String tableName = commands[2];
+        if(!tableExists(tableName)) 
+        {
+            System.out.println(tableName + " doesn't exist");
+            return;
+        }
+        
+        //* 6 because ALTER TABLE table_name ADD column_name datatype; 
+        if(commands[3].equals("ADD"))
+        {
+            List<String> tableHeader = tableSchema.get(tableName);
+            
+            for(int i=0;i<tableHeader.size();i+=2)
+            {
+                if(commands[4].equals(tableHeader.get(i)))
+                {
+                    System.out.println(commands[4]+" already exists");
+                    return;
+                }
+            }
+            if(commands[5].equals("INT") || commands[5].equals("DECIMAL") || commands[5].matches("^CHAR\\([1-9][0-9]?\\)$"))
+            {
+                tableHeader.add(commands[4]);
+                tableHeader.add(commands[5]);
+            } 
+            //* "^CHAR\\(-[1-9][0-9]?\\)$" is used to detect Negative numbers e.g. CHAR(-20)
+            else if (commands[5].matches("^CHAR\\(-[1-9][0-9]?\\)$"))
+            {
+                System.out.println("Negative Length Columns are not allowed");
+                return;
+            } 
+            //* "^CHAR\\(0\\)$" is used to detect 0 number e.g. CHAR(0)
+            else if (commands[5].matches("^CHAR\\(0\\)$"))
+            {
+                System.out.println("Zero Length Columns are not allowed");
+                return;
+            } 
+            //* If anyone of the above conditions do not match that means the Datatype is Unknown 
+            else {
+                System.out.println("Unknown Datatype - " + commands[5]);
+                return;
+            }
+            
+            String fileContents="";
+            for(Map.Entry tableHeadRow:tableSchema.entrySet())
+            {
+                fileContents+=tableHeadRow.getKey()+"#";
+                for(String entry:(List<String>)tableHeadRow.getValue())
+                {
+                    fileContents+=entry+"#";
+                }
+                fileContents = fileContents.substring(0,fileContents.length()-1);
+                fileContents+="\n";
+            }
+            // System.out.println(fileContents);
+            try {
+                BufferedWriter fileWriter = new BufferedWriter(new FileWriter("schema.txt"));
+                fileWriter.write(fileContents);
+                System.out.println("Column Added Successfully to "+tableName);
+                fileWriter.close();
+            } catch (IOException e) {
+                System.out.println("Error occurred while adding Column in "+tableName);
+                e.printStackTrace();
+            }
+            
+        } 
+        //* 6 because ALTER TABLE table_name DROP COLUMN column_name;
+        else if(commands[3].equals("DROP") && commands[4].equals("COLUMN"))
+        {
+            List<String> tableHeader = tableSchema.get(tableName);
+            int columnIndex = 0;
+            boolean columnExist = false;
+            
+            for(int i=0;i<tableHeader.size();i+=2)
+            {
+                if(commands[5].equals(tableHeader.get(i)))
+                {
+                    columnIndex = i/2;
+                    columnExist=true;
+                    tableHeader.remove(i);
+                    tableHeader.remove(i);
+                    break;
+                    // System.out.println(commands[4]+" already exists");
+                }
+            }
+            
+            if(!columnExist)
+            {
+                System.out.println(commands[5]+" doesn't exist in "+tableName);
+                return;
+            }
+
+            String fileContents="";
+            for(Map.Entry tableHeadRow:tableSchema.entrySet())
+            {
+                fileContents+=tableHeadRow.getKey()+"#";
+                for(String entry:(List<String>)tableHeadRow.getValue())
+                {
+                    fileContents+=entry+"#";
+                }
+                fileContents = fileContents.substring(0,fileContents.length()-1);
+                fileContents+="\n";
+            }
+            // System.out.println(fileContents);
+
+            loadTables(tableName);
+
+            //* To remove the column Entries from tableName.txt file
+            List<String> tableContent = tableDetails.get(tableName);
+            // System.out.println(tableContent);
+            String tableDetails="";
+            for(int i=0;i<tableContent.size();++i)
+            {
+                String[] tempArray = tableContent.get(i).split("#");
+                String temp="";
+                for(int j=0;j<tempArray.length;++j)
+                {
+                    if(j != columnIndex)
+                    {
+                        temp+=tempArray[j]+"#";
+                    }
+                }
+                temp = temp.substring(0,temp.length()-1);
+                tableDetails+=temp+"\n";
+                tableContent.set(i, temp);
+            }
+            // System.out.println(tableContent);
+            
+            //* For deleting Column from Schema File
+            try {
+                BufferedWriter fileWriter = new BufferedWriter(new FileWriter("schema.txt"));
+                fileWriter.write(fileContents);
+                System.out.println("Column Removed Successfully from "+tableName);
+                fileWriter.close();
+            } catch (IOException e) {
+                System.out.println("Error occurred while removing Column from "+tableName);
+                e.printStackTrace();
+            }
+            
+            //* For deleting Column Values from tablename.txt File
+            String fileName = tableName + ".txt";
+            try {
+                BufferedWriter fileWriter = new BufferedWriter(new FileWriter(fileName));
+                fileWriter.write(tableDetails);
+                // System.out.println("Row Added Successfully in " + tableName);
+                fileWriter.close();
+            } catch (IOException e) {
+                // System.out.println("Error occurred while adding Row in " + tableName);
+                e.printStackTrace();
+            }
+
+        }
+        else
+        {
+            System.out.println("Incorrect ALTER Command");
+            return;
+        }
+        
     }
 }

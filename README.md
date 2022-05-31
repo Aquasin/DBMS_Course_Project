@@ -47,16 +47,19 @@ INSERT INTO TABLE_NAME VALUES ( 'hello' , 20);
 CREATE (DONE)
 </li>
 <li>
-SELECT (But do refactoring as code is duplicate in multiple places)
+ALTER (DONE)
+</li>
+<li>
+SELECT (But do refactor as code is duplicate in multiple places)
 </li>
 <li>
 INSERT (DONE)
 </li>
 <li>
-UPDATE (But do refactoring as code is duplicate in multiple places)
+UPDATE (But do refactor as code is duplicate in multiple places)
 </li>
 <li>
-DELETE (But do refactoring as code is duplicate in multiple places)
+DELETE (But do refactor as code is duplicate in multiple places)
 </li>
 <li>
 DROP (DONE)
@@ -77,11 +80,6 @@ CLEAR (DONE)
 Ask Ma'am
 
 <ul>
-<li>
-ALTER Command 
-<br/>
-Add and Drop Column 
-</li>
 <li>
 Constraints like Unique, PK, Not Null and Check
 <li>
