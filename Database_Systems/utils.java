@@ -310,8 +310,46 @@ public class utils {
             System.out.println("Incorrect HELP Command");
             return;
         }
-        if(!commands[1].equals("TABLES;"))
+        //* To remove the ending ;
+		commands[commands.length - 1] = commands[commands.length - 1].substring(0,commands[commands.length - 1].length()-1);
+        if(!commands[1].equals("TABLES"))
         {
+            if(commands[1].equals("CREATE"))
+            {
+                System.out.println("The CREATE TABLE command creates a new table in the database");
+                System.out.println("Command Structure - CREATE TABLE table_name (attr_name1 attr_type1, attr_name2 attr_type2, ...)");
+                return;
+            }
+            else if(commands[1].equals("DROP"))
+            {
+                System.out.println("The DROP TABLE command deletes a table in the database");
+                System.out.println("Command Structure - DROP TABLE table_name");
+                return;
+            }
+            else if(commands[1].equals("SELECT"))
+            {
+                System.out.println("The SELECT statement is used to select data from a database");
+                System.out.println("Command Structure - SELECT attr_list FROM table_list WHERE condition_list");
+                return;
+            }
+            else if(commands[1].equals("INSERT"))
+            {
+                System.out.println("The INSERT INTO statement is used to insert new records in a table");
+                System.out.println("Command Structure - INSERT INTO table_name VALUES(attr_value1, attr_value2, ...)");
+                return;
+            }
+            else if(commands[1].equals("DELETE"))
+            {
+                System.out.println("The DELETE statement is used to delete existing records in a table");
+                System.out.println("Command Structure - DELETE FROM table_name WHERE condition_list");
+                return;
+            }
+            else if(commands[1].equals("UPDATE"))
+            {
+                System.out.println("The UPDATE statement is used to modify the existing records in a table");
+                System.out.println("Command Structure - UPDATE table_name SET attr1_name = attr1_value, attr2_name = attr2_value... WHERE condition_list");
+                return;
+            }
             System.out.println("Incorrect HELP Command");
             return;
         }

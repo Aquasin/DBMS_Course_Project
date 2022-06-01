@@ -7,14 +7,6 @@ Repo for DBMS Course Project
 1. Compile ` FellowshipDatabase.java` using javac
 2. Run `FellowshipDatabase` using java
 
-## Thing to do
-
-1. Give better errors comments
-
-2. Look into Optimizing the code. Make the code modular
-
-3. Use StringBuilder if possible for String concatenation instead of +=
-
 ## While running commands keep spaces before and after ( and , and only before for );
 
 <h3 style="color:#00ff00">Correct Way</h3>
@@ -50,16 +42,16 @@ CREATE (DONE)
 ALTER (DONE)
 </li>
 <li>
-SELECT (But do refactor as code is duplicate in multiple places)
+SELECT (DONE)
 </li>
 <li>
 INSERT (DONE)
 </li>
 <li>
-UPDATE (But do refactor as code is duplicate in multiple places)
+UPDATE (DONE)
 </li>
 <li>
-DELETE (But do refactor as code is duplicate in multiple places)
+DELETE (DONE)
 </li>
 <li>
 DROP (DONE)
@@ -72,19 +64,5 @@ QUIT (DONE)
 </li>
 <li>
 CLEAR (DONE)
-</li>
-</ul>
-
-## Things to do for extra marks:
-
-Ask Ma'am
-
-<ul>
-<li>
-Constraints like Unique, PK, Not Null and Check
-<li>
-Multiple conditions for select (AND,OR)
-<br/>
-e.g SELECT * FROM CUSTOMER WHERE ID < 2 OR NAME = XYZ AND SAL < 30000;
 </li>
 </ul>
